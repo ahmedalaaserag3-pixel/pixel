@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel World - عالم الألعاب الجماعي</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Tahoma', sans-serif;
+            overflow: hidden;
+            text-align: center;
+        }
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+        input, select, button {
+            padding: 12px 20px;
+            margin: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            background-color: #ffcc00;
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #ffd633;
+            transform: scale(1.05);
+        }
+        #game-screen {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        canvas {
+            background: #222;
+            display: block;
+            margin: 0 auto;
+        }
+        #ui-bar {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen">
+        <h1>🌟 أهلاً بك في Pixel World 🌟</h1>
+        <p>سجل اسمك واختر الماب عشان تبدأ تلعب مع صحابك!</p>
+        <input type="text" id="username" placeholder="اكتب اسم اللاعب هنا..." maxlength="15">
+        <select id="map-select">
+            <option value="map1">ماب المدينة الكبيرة 🏙️</option>
+            <option value="map2">ماب جزيرة المغامرات 🌴</option>
+            <option value="map3">ماب الملاهي السريعة 🎢</option>
+        </select>
+        <button onclick="startGame()">دخول اللعبة 🚀</button>
+    </div>
+
+    <!-- شاشة اللعبة -->
+    <div id="game-screen">
+        <div id="ui-bar">
+            <span id="player-display-name"></span> | 
+            <span id="current-map-name">الماب: المدينة</span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+    </div>
+
+    <script>
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const usernameInput = document.getElementById('username');
+        const mapSelect = document.getElementById('map-select');
+        const playerDisplayName = document.getElementById('player-display-name');
+        const currentMapName = document.getElementById('current-map-name');
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let myPlayer = {
+            x: 400,
+            y: 250,
+            size: 30,
+            speed: 5,
+            color: '#' + Math.floor(Math.random()*16777215).toString(16),
+            name: ''
+        };
+
+        let keys = {};
+
+        function startGame() {
+            const name = usernameInput.value.trim();
+            if (!name) {
+                alert('يا غالي لازم تكتب اسم الأول!');
+                return;
+            }
+            myPlayer.name = name;
+            playerDisplayName.innerText = `اللاعب: ${name}`;
+            currentMapName.innerText = `الماب: ${mapSelect.options[mapSelect.selectedIndex].text}`;
+
+            loginScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+
+            gameLoop();
+        }
+
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function update() {
+            if (keys['ArrowUp'] || keys['w']) myPlayer.y -= myPlayer.speed;
+            if (keys['ArrowDown'] || keys['s']) myPlayer.y += myPlayer.speed;
+            if (keys['ArrowLeft'] || keys['a']) myPlayer.x -= myPlayer.speed;
+            if (keys['ArrowRight'] || keys['d']) myPlayer.x += myPlayer.speed;
+
+            // حدود الشاشة
+            if (myPlayer.x < 0) myPlayer.x = 0;
+            if (myPlayer.x > canvas.width - myPlayer.size) myPlayer.x = canvas.width - myPlayer.size;
+            if (myPlayer.y < 0) myPlayer.y = 0;
+            if (myPlayer.y > canvas.height - myPlayer.size) myPlayer.y = canvas.height - myPlayer.size;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم الأرضية (شكل شبكة)
+            ctx.strokeStyle = '#333';
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+
+            // رسم اللاعب
+            ctx.fillStyle = myPlayer.color;
+            ctx.fillRect(myPlayer.x, myPlayer.y, myPlayer.size, myPlayer.size);
+
+            // رسم اسم اللاعب فوقه
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Tahoma';
+            ctx.fillText(myPlayer.name, myPlayer.x, myPlayer.y - 10);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
